@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment - Elegant Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .payment-methods {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .payment-method {
+      background: white;
+      border: 3px solid var(--light);
+      border-radius: 15px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .payment-method:hover {
+      border-color: var(--secondary);
+      transform: translateY(-5px);
+      box-shadow: var(--shadow);
+    }
+
+    .payment-method.selected {
+      border-color: var(--secondary);
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    }
+
+    .payment-method input[type="radio"] {
+      display: none;
+    }
+
+    .payment-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .payment-name {
+      font-weight: bold;
+      color: var(--primary);
+      font-size: 1.1rem;
+    }
+
+    .card-form {
+      background: white;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: var(--shadow);
+      margin-top: 2rem;
+      display: none;
+    }
+
+    .card-form.active {
+      display: block;
+      animation: fadeInUp 0.5s;
+    }
+
+    .card-preview {
+      background: var(--gradient);
+      color: white;
+      padding: 2rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      min-height: 200px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card-chip {
+      width: 50px;
+      height: 40px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .card-number {
+      font-size: 1.5rem;
+      letter-spacing: 3px;
+      margin: 1rem 0;
+    }
+
+    .card-details {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .progress-steps {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 3rem;
+      gap: 1rem;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #7f8c8d;
+    }
+
+    .step.active .step-number {
+      background: var(--gradient);
+      color: white;
+    }
+
+    .step.completed .step-number {
+      background: var(--success);
+      color: white;
+    }
+
+    .step-arrow {
+      color: #7f8c8d;
+      font-size: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <a href="/" class="logo">✨ Elegant Store</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products">Products</a></li>
+        <li><a href="/wishlist">❤️ Wishlist</a></li>
+        <li><a href="/orders/my-orders">My Orders</a></li>
+        <li><a href="/auth/logout">Logout (<%= user.username %>)</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="progress-steps fade-in">
+      <div class="step completed">
+        <div class="step-number">1</div>
+        <span>Cart</span>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step completed">
+        <div class="step-number">2</div>
+        <span>Shipping</span>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step active">
+        <div class="step-number">3</div>
+        <span>Payment</span>
+      </div>
+      <div class="step-arrow">→</div>
+      <div class="step">
+        <div class="step-number">4</div>
+        <span>Confirmation</span>
+      </div>
+    </div>
+
+    <h1 style="font-size: 2.5rem; margin-bottom: 2rem; color: var(--primary); text-align: center;">Payment Method</h1>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+      <div>
+        <form id="paymentForm">
+          <input type="hidden" name="shippingAddress" value="<%= shippingAddress %>">
+          
+          <div class="payment-methods">
+            <label class="payment-method selected" data-method="card">
+              <input type="radio" name="paymentMethod" value="card" checked>
+              <div class="payment-icon">💳</div>
+              <div class="payment-name">Credit Card</div>
+            </label>
+
+            <label class="payment-method" data-method="paypal">
+              <input type="radio" name="paymentMethod" value="paypal">
+              <div class="payment-icon">🅿️</div>
+              <div class="payment-name">PayPal</div>
+            </label>
+
+            <label class="payment-method" data-method="cod">
+              <input type="radio" name="paymentMethod" value="cod">
+              <div class="payment-icon">💵</div>
+              <div class="payment-name">Cash on Delivery</div>
+            </label>
+          </div>
+
+          <div class="card-form active" id="cardForm">
+            <div class="card-preview">
+              <div>
+                <div class="card-chip"></div>
+                <div class="card-number" id="cardNumberDisplay">•••• •••• •••• ••••</div>
+              </div>
+              <div class="card-details">
+                <div>
+                  <div style="font-size: 0.8rem; opacity: 0.8;">Card Holder</div>
+                  <div id="cardHolderDisplay" style="font-weight: bold;">YOUR NAME</div>
+                </div>
+                <div>
+                  <div style="font-size: 0.8rem; opacity: 0.8;">Expires</div>
+                  <div id="cardExpiryDisplay" style="font-weight: bold;">MM/YY</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="cardNumber">Card Number</label>
+              <input type="text" id="cardNumber" name="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19" required>
+            </div>
+
+            <div class="form-group">
+              <label for="cardHolder">Card Holder Name</label>
+              <input type="text" id="cardHolder" name="cardHolder" placeholder="John Doe" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+              <div class="form-group">
+                <label for="cardExpiry">Expiry Date</label>
+                <input type="text" id="cardExpiry" name="cardExpiry" placeholder="MM/YY" maxlength="5" required>
+              </div>
+
+              <div class="form-group">
+                <label for="cardCVV">CVV</label>
+                <input type="text" id="cardCVV" name="cardCVV" placeholder="123" maxlength="3" required>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success" style="width: 100%; padding: 1.2rem; font-size: 1.1rem; margin-top: 2rem;">
+            💳 Complete Payment - $<%= total.toFixed(2) %>
+          </button>
+        </form>
+      </div>
+
+      <div>
+        <div class="cart-summary">
+          <h2 style="margin-bottom: 1.5rem;">Order Summary</h2>
+          <% cart.forEach(item => { %>
+            <div style="display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid var(--light);">
+              <div>
+                <strong><%= item.name %></strong>
+                <p style="color: #7f8c8d;">Qty: <%= item.quantity %></p>
+              </div>
+              <div style="font-weight: bold; color: var(--secondary);">
+                $<%= (item.price * item.quantity).toFixed(2) %>
+              </div>
+            </div>
+          <% }); %>
+
+          <div style="padding: 1rem 0; border-bottom: 1px solid var(--light);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <span>Subtotal:</span>
+              <span>$<%= total.toFixed(2) %></span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+              <span>Shipping:</span>
+              <span style="color: var(--success);">FREE</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span>Tax (10%):</span>
+              <span>$<%= (total * 0.1).toFixed(2) %></span>
+            </div>
+          </div>
+
+          <div class="cart-total">
+            <span>Total:</span>
+            <span>$<%= (total * 1.1).toFixed(2) %></span>
+          </div>
+
+          <div style="background: var(--light); padding: 1rem; border-radius: 10px; margin-top: 1rem;">
+            <strong>Shipping Address:</strong>
+            <p style="color: #7f8c8d; margin-top: 0.5rem;"><%= shippingAddress %></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 Elegant Store. All rights reserved. | Premium Quality Products</p>
+  </footer>
+
+  <script>
+    // Payment method selection
+    document.querySelectorAll('.payment-method').forEach(method => {
+      method.addEventListener('click', function() {
+        document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+        this.classList.add('selected');
+        
+        const selectedMethod = this.dataset.method;
+        const cardForm = document.getElementById('cardForm');
+        
+        if (selectedMethod === 'card') {
+          cardForm.classList.add('active');
+          cardForm.querySelectorAll('input').forEach(input => input.required = true);
+        } else {
+          cardForm.classList.remove('active');
+          cardForm.querySelectorAll('input').forEach(input => input.required = false);
+        }
+      });
+    });
+
+    // Card number formatting
+    document.getElementById('cardNumber').addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\s/g, '');
+      let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+      e.target.value = formattedValue;
+      document.getElementById('cardNumberDisplay').textContent = formattedValue || '•••• •••• •••• ••••';
+    });
+
+    // Card holder formatting
+    document.getElementById('cardHolder').addEventListener('input', function(e) {
+      document.getElementById('cardHolderDisplay').textContent = e.target.value.toUpperCase() || 'YOUR NAME';
+    });
+
+    // Expiry formatting
+    document.getElementById('cardExpiry').addEventListener('input', function(e) {
+      let value = e.target.value.replace(/\D/g, '');
+      if (value.length >= 2) {
+        value = value.slice(0, 2) + '/' + value.slice(2, 4);
+      }
+      e.target.value = value;
+      document.getElementById('cardExpiryDisplay').textContent = value || 'MM/YY';
+    });
+
+    // Form submission
+    document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const shippingAddress = formData.get('shippingAddress');
+      const paymentMethod = formData.get('paymentMethod');
+      
+      // Show loading
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalText = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<span class="loading"></span> Processing...';
+      submitBtn.disabled = true;
+      
+      try {
+        const response = await fetch('/orders/place', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            shippingAddress,
+            paymentMethod,
+            cardLast4: paymentMethod === 'card' ? formData.get('cardNumber').slice(-4) : null
+          })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          window.location.href = `/orders/confirmation/${data.orderId}`;
+        } else {
+          alert('Payment failed. Please try again.');
+          submitBtn.innerHTML = originalText;
+          submitBtn.disabled = false;
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred. Please try again.');
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

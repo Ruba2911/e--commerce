@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Wishlist - Elegant Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <a href="/" class="logo">✨ Elegant Store</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products">Products</a></li>
+        <li><a href="/wishlist">❤️ Wishlist</a></li>
+        <li><a href="/orders/my-orders">My Orders</a></li>
+        <li><a href="/auth/logout">Logout (<%= user.username %>)</a></li>
+        <li>
+          <a href="/cart" class="cart-icon">
+            🛒
+            <% if (cart && cart.length > 0) { %>
+              <span class="cart-count"><%= cart.length %></span>
+            <% } %>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="section-header fade-in">
+      <h1 class="section-title">❤️ My Wishlist</h1>
+      <p class="section-subtitle">Your favorite products saved for later</p>
+    </div>
+
+    <% if (products.length === 0) { %>
+      <div class="wishlist-empty fade-in">
+        <div class="wishlist-empty-icon">💔</div>
+        <h2>Your wishlist is empty</h2>
+        <p>Start adding products you love to your wishlist!</p>
+        <a href="/products" class="btn btn-primary" style="margin-top: 2rem;">Browse Products</a>
+      </div>
+    <% } else { %>
+      <div class="products-grid">
+        <% products.forEach(product => { %>
+          <div class="product-card fade-in">
+            <div class="product-image-container">
+              <button class="wishlist-btn active" onclick="toggleWishlist(<%= product.id %>, this)" data-product-id="<%= product.id %>">
+                ❤️
+              </button>
+              <% if (product.stock < 20) { %>
+                <span class="product-badge">Low Stock!</span>
+              <% } %>
+              <img src="<%= product.image %>" alt="<%= product.name %>" class="product-image" loading="lazy">
+            </div>
+            <div class="product-info">
+              <span class="product-category"><%= product.category %></span>
+              <h3 class="product-name"><%= product.name %></h3>
+              <p class="product-description"><%= product.description %></p>
+              <div class="product-price">$<%= product.price.toFixed(2) %></div>
+              <p class="product-stock <%= product.stock < 20 ? 'low' : '' %>">
+                <%= product.stock %> in stock
+              </p>
+              <div class="product-actions">
+                <a href="/products/<%= product.id %>" class="btn-icon btn-primary" style="flex: 1; text-align: center; justify-content: center;">
+                  👁️ View Details
+                </a>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 Elegant Store. All rights reserved. | Premium Quality Products</p>
+  </footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>

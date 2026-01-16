@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Confirmation - Elegant Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <a href="/" class="logo">✨ Elegant Store</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products">Products</a></li>
+        <li><a href="/orders/my-orders">My Orders</a></li>
+        <li><a href="/auth/logout">Logout (<%= user.username %>)</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div style="text-align: center; padding: 3rem; background: white; border-radius: 20px; box-shadow: var(--shadow);" class="fade-in">
+      <div style="font-size: 5rem; margin-bottom: 1rem;">✅</div>
+      <h1 style="color: var(--success); margin-bottom: 1rem;">Payment Successful!</h1>
+      <p style="font-size: 1.2rem; color: #7f8c8d; margin-bottom: 2rem;">
+        Thank you for your purchase. Your order #<%= order.id %> has been confirmed and paid.
+      </p>
+
+      <div style="background: var(--light); padding: 2rem; border-radius: 15px; margin: 2rem 0; text-align: left;">
+        <h2 style="margin-bottom: 1rem;">Order Details</h2>
+        <p><strong>Order ID:</strong> #<%= order.id %></p>
+        <p><strong>Total Amount:</strong> $<%= order.total.toFixed(2) %></p>
+        <p><strong>Payment Status:</strong> <span style="color: var(--success); font-weight: bold;"><%= order.status.toUpperCase() %></span></p>
+        <p><strong>Shipping Address:</strong> <%= order.shipping_address %></p>
+        <p><strong>Order Date:</strong> <%= new Date(order.created_at).toLocaleDateString() %></p>
+      </div>
+
+      <div style="text-align: left; margin: 2rem 0;">
+        <h3 style="margin-bottom: 1rem;">Items Ordered:</h3>
+        <% items.forEach(item => { %>
+          <div style="display: flex; gap: 1rem; padding: 1rem; border-bottom: 1px solid var(--light); align-items: center;">
+            <img src="<%= item.image %>" alt="<%= item.name %>" style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px;">
+            <div style="flex: 1;">
+              <strong><%= item.name %></strong>
+              <p style="color: #7f8c8d;">Quantity: <%= item.quantity %></p>
+            </div>
+            <div style="font-weight: bold; color: var(--secondary);">
+              $<%= (item.price * item.quantity).toFixed(2) %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+
+      <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+        <a href="/orders/my-orders" class="btn btn-primary">View My Orders</a>
+        <a href="/products" class="btn">Continue Shopping</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2024 Elegant Store. All rights reserved. | Premium Quality Products</p>
+  </footer>
+</body>
+</html>

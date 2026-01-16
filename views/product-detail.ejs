@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= product.name %> - Elegant Store</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav>
+    <div class="nav-container">
+      <a href="/" class="logo">✨ Elegant Store</a>
+      <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/products">Products</a></li>
+        <% if (user) { %>
+          <li><a href="/wishlist">❤️ Wishlist</a></li>
+          <li><a href="/orders/my-orders">My Orders</a></li>
+          <li><a href="/auth/logout">Logout (<%= user.username %>)</a></li>
+        <% } else { %>
+          <li><a href="/auth/login">Login</a></li>
+          <li><a href="/auth/register">Register</a></li>
+        <% } %>
+        <li>
+          <a href="/cart" class="cart-icon">
+            🛒
+            <% if (cart && cart.length > 0) { %>
+              <span class="cart-count"><%= cart.length %></span>
+            <% } %>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="product-detail fade-in">
+      <div>
+        <img src="<%= product.image %>" alt="<%= product.name %>" class="product-detail-image">
+      </div>
+      <div class="product-detail-info">
+        <span class="product-category"><%= product.category %></span>
+        <h1><%= product.name %></h1>
+        <p style="color: #7f8c8d; font-size: 1.1rem; line-height: 1.8; margin: 1.5rem 0;"><%= product.description %></p>
+        <div class="product-detail-price">$<%= product.price.toFixed(2) %></div>
+        
+        <div style="background: var(--light); padding: 1.5rem; border-radius: 15px; margin: 1.5rem 0;">
+          <p style="margin-bottom: 0.8rem;"><strong>Category:</strong> <%= product.category %></p>
+          <p class="product-stock <%= product.stock < 20 ? 'low' : '' %>" style="margin: 0;">
+            <strong>Stock:</strong> <%= product.stock %> available
+          </p>
+        </div>
+
+        <div class="quantity-selector">
+          <label for="quantity" style="font-weight: 600; font-size: 1.1rem;">Quantity:</label>
+          <input type="number" id="quantity" value="1" min="1" max="<%= product.stock %>">
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+          <button onclick="addToCart(<%= product.id %>)" class="btn-icon btn-accent" style="flex: 2; padding: 1.3rem; font-size: 1.1rem; justify-content: center;">
+            🛒 Add to Cart
+          </button>
+          <% if (user) { %>
+            <button onclick="toggleWishlist(<%= product.id %>, this)" class="wishlist-btn" data-product-id="<%= product.id %>" style="position: static; width: 60px; height: 60px; font-size: 1.5rem;">
+              ❤️
+            </button>
+          <% } %>
+        </div>
+
+        <button onclick="shareProduct()" class="btn btn-outline" style="width: 100%; text-align: center; margin-top: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem;">
+          🔗 Share Product Link
+        </button>
+
+        <a href="/products" class="btn btn-outline" style="width: 100%; text-align: center; margin-top: 1rem; display: block; padding: 1rem;">
+          ← Back to Products
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <div id="shareModal" class="modal">
+    <div class="modal-content" style="max-width: 600px;">
+      <span class="close-modal" onclick="closeShareModal()">&times;</span>
+      <div style="padding: 2rem;">
+        <h2 style="margin-bottom: 1.5rem; color: var(--primary);">📤 Share Product</h2>
+        
+        <div style="background: var(--light); padding: 1.5rem; border-radius: 15px; margin-bottom: 1.5rem;">
+          <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+            <img src="<%= product.image %>" alt="<%= product.name %>" style="width: 80px; height: 80px; object-fit: cover; border-radius: 10px;">
+            <div>
+              <h3 style="color: var(--primary); margin-bottom: 0.5rem;"><%= product.name %></h3>
+              <p style="color: var(--secondary); font-weight: bold; font-size: 1.2rem;">$<%= product.price.toFixed(2) %></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">Product Link:</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="productLink" readonly value="http://localhost:3000/products/<%= product.id %>" 
+                   style="flex: 1; padding: 1rem; border: 2px solid var(--secondary); border-radius: 10px; font-size: 1rem; background: white;">
+            <button onclick="copyLink()" class="btn btn-primary" style="padding: 1rem 2rem; white-space: nowrap;">
+              📋 Copy
+            </button>
+          </div>
+          <p id="copyStatus" style="color: var(--success); margin-top: 0.5rem; font-weight: bold; display: none;">✅ Link copied to clipboard!</p>
+        </div>
+
+        <div style="margin-top: 2rem;">
+          <label style="font-weight: bold; margin-bottom: 1rem; display: block;">Share via:</label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem;">
+            <button onclick="shareViaWhatsApp()" class="btn btn-success" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem;">
+              📱 WhatsApp
+            </button>
+            <button onclick="shareViaEmail()" class="btn btn-primary" style="display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem;">
+              📧 Email
+            </button>
+            <button onclick="shareViaFacebook()" class="btn" style="background: #1877f2; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem;">
+              📘 Facebook
+            </button>
+            <button onclick="shareViaTwitter()" class="btn" style="background: #1da1f2; color: white; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 1rem;">
+              🐦 Twitter
+            </button>
+          </div>
+        </div>
+
+        <div style="margin-top: 2rem; padding: 1rem; background: var(--light); border-radius: 10px;">
+          <p style="font-size: 0.9rem; color: #7f8c8d; text-align: center;">
+            💡 Share this link with friends and family to show them this amazing product!
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const productData = {
+      name: '<%= product.name %>',
+      price: '<%= product.price.toFixed(2) %>',
+      url: 'http://localhost:3000/products/<%= product.id %>',
+      description: '<%= product.description %>'
+    };
+
+    function shareProduct() {
+      document.getElementById('shareModal').style.display = 'block';
+    }
+
+    function closeShareModal() {
+      document.getElementById('shareModal').style.display = 'none';
+      document.getElementById('copyStatus').style.display = 'none';
+    }
+
+    function copyLink() {
+      const linkInput = document.getElementById('productLink');
+      linkInput.select();
+      linkInput.setSelectionRange(0, 99999); // For mobile devices
+      
+      navigator.clipboard.writeText(linkInput.value).then(() => {
+        const status = document.getElementById('copyStatus');
+        status.style.display = 'block';
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 3000);
+      });
+    }
+
+    function shareViaWhatsApp() {
+      const text = `Check out this product: ${productData.name} - $${productData.price}\n${productData.url}`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    }
+
+    function shareViaEmail() {
+      const subject = `Check out: ${productData.name}`;
+      const body = `I found this amazing product!\n\n${productData.name}\nPrice: $${productData.price}\n\n${productData.description}\n\nView it here: ${productData.url}`;
+      window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    }
+
+    function shareViaFacebook() {
+      window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productData.url)}`, '_blank');
+    }
+
+    function shareViaTwitter() {
+      const text = `Check out ${productData.name} for $${productData.price}!`;
+      window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(productData.url)}`, '_blank');
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+      const modal = document.getElementById('shareModal');
+      if (event.target == modal) {
+        closeShareModal();
+      }
+    }
+  </script>
+
+  <footer>
+    <p>&copy; 2024 Elegant Store. All rights reserved. | Premium Quality Products</p>
+  </footer>
+
+  <script src="/js/main.js"></script>
+</body>
+</html>
