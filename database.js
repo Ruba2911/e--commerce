@@ -11,6 +11,8 @@ const db = new sqlite3.Database('./ecommerce.db', (err) => {
 });
 
 function initializeDatabase() {
+  console.log('Initializing database tables...');
+  
   // Users table
   db.run(`CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -18,7 +20,10 @@ function initializeDatabase() {
     email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+  )`, (err) => {
+    if (err) console.error('Error creating users table:', err);
+    else console.log('Users table ready');
+  });
 
   // Products table
   db.run(`CREATE TABLE IF NOT EXISTS products (
@@ -30,7 +35,14 @@ function initializeDatabase() {
     category TEXT,
     stock INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )`);
+  )`, (err) => {
+    if (err) console.error('Error creating products table:', err);
+    else {
+      console.log('Products table ready');
+      // Check and insert products after table is created
+      checkAndInsertProducts();
+    }
+  });
 
   // Orders table
   db.run(`CREATE TABLE IF NOT EXISTS orders (
@@ -41,7 +53,10 @@ function initializeDatabase() {
     shipping_address TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
-  )`);
+  )`, (err) => {
+    if (err) console.error('Error creating orders table:', err);
+    else console.log('Orders table ready');
+  });
 
   // Order items table
   db.run(`CREATE TABLE IF NOT EXISTS order_items (
@@ -52,7 +67,10 @@ function initializeDatabase() {
     price REAL NOT NULL,
     FOREIGN KEY (order_id) REFERENCES orders(id),
     FOREIGN KEY (product_id) REFERENCES products(id)
-  )`);
+  )`, (err) => {
+    if (err) console.error('Error creating order_items table:', err);
+    else console.log('Order items table ready');
+  });
 
   // Wishlist table
   db.run(`CREATE TABLE IF NOT EXISTS wishlist (
@@ -63,17 +81,27 @@ function initializeDatabase() {
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (product_id) REFERENCES products(id),
     UNIQUE(user_id, product_id)
-  )`);
+  )`, (err) => {
+    if (err) console.error('Error creating wishlist table:', err);
+    else console.log('Wishlist table ready');
+  });
+}
 
-  // Insert sample products
+function checkAndInsertProducts() {
   db.get('SELECT COUNT(*) as count FROM products', [], (err, row) => {
-    if (!err && row.count === 0) {
+    if (err) {
+      console.error('Error checking products:', err);
+    } else if (row.count === 0) {
+      console.log('No products found, inserting sample products...');
       insertSampleProducts();
+    } else {
+      console.log(`Database already has ${row.count} products`);
     }
   });
 }
 
 function insertSampleProducts() {
+  console.log('Starting to insert sample products...');
   const products = [
     // Electronics
     ['Premium Wireless Headphones', 'High-quality noise-canceling headphones with 30-hour battery life and premium sound quality', 199.99, 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80', 'Electronics', 50],
@@ -110,9 +138,24 @@ function insertSampleProducts() {
   ];
 
   const stmt = db.prepare('INSERT INTO products (name, description, price, image, category, stock) VALUES (?, ?, ?, ?, ?, ?)');
-  products.forEach(product => stmt.run(product));
-  stmt.finalize();
-  console.log('Sample products inserted - 27 products across 3 categories (including 3 clothing items)');
+  
+  let insertedCount = 0;
+  products.forEach((product, index) => {
+    stmt.run(product, (err) => {
+      if (err) {
+        console.error(`Error inserting product ${index + 1}:`, err);
+      } else {
+        insertedCount++;
+        if (insertedCount === products.length) {
+          console.log(`Successfully inserted all ${insertedCount} products!`);
+        }
+      }
+    });
+  });
+  
+  stmt.finalize((err) => {
+    if (err) console.error('Error finalizing statement:', err);
+  });
 }
 
 module.exports = db;
